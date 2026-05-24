@@ -113,6 +113,13 @@
     /* ── Hero content fade ── */
     #hero-content { will-change: opacity; }
 
+    /* ── Typing bounce dots ── */
+    @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+    /* ── Mockup bottom-sheet slide ── */
+    @keyframes sheetUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    .sheet-up { animation: sheetUp 280ms cubic-bezier(.2,.7,.2,1) forwards; }
+
     /* ── Mobile: phone mockups — remove Y-rotation, slight scale ── */
     @media (max-width: 639px) {
       .tilt-r {
