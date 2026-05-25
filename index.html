@@ -168,6 +168,41 @@
     }
     #hero-content, #top > .absolute { position: relative; z-index: 1; }
 
+    /* ── Page loader ── */
+    #page-loader {
+      position: fixed; inset: 0; z-index: 999998;
+      background: #000;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 700ms ease;
+      will-change: opacity;
+    }
+    #page-loader.loader-out { opacity: 0; pointer-events: none; }
+
+    .loader-v-svg {
+      width: 80px; height: 88px;
+      filter: drop-shadow(0 0 20px rgba(29,158,117,.4));
+      animation: loaderVExit 700ms cubic-bezier(.25,.46,.45,.94) 2400ms both;
+    }
+    @keyframes loaderVExit {
+      from { transform: scale(1);    opacity: 1; }
+      to   { transform: scale(1.22); opacity: 0; }
+    }
+
+    .loader-v-path {
+      fill: none;
+      stroke: #1D9E75;
+      stroke-width: 16;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 392;
+      stroke-dashoffset: 392;
+      animation:
+        loaderVDraw 1100ms cubic-bezier(.4,0,.2,1) 350ms forwards,
+        loaderVFill  450ms ease 1400ms forwards;
+    }
+    @keyframes loaderVDraw { to { stroke-dashoffset: 0; } }
+    @keyframes loaderVFill { from { fill: transparent; } to { fill: #1D9E75; } }
+
     /* ── Mobile: phone mockups — remove Y-rotation, slight scale ── */
     @media (max-width: 639px) {
       .tilt-r {
@@ -215,6 +250,12 @@
   </script>
 </head>
 <body class="font-sans antialiased text-black">
+  <div id="page-loader" aria-hidden="true">
+    <svg class="loader-v-svg" viewBox="0 0 200 216" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path class="loader-v-path" d="M 24 20 L 100 196 L 176 20"/>
+    </svg>
+  </div>
+
   <div id="root"></div>
 
   <div id="scroll-bar"></div>
@@ -232,6 +273,18 @@
   <script type="text/babel" src="app.jsx"></script>
 
   <script>
+    // Page loader — fade out after V animation completes
+    (function () {
+      const _l = document.getElementById('page-loader');
+      if (!_l) return;
+      document.documentElement.style.overflow = 'hidden';
+      setTimeout(function () {
+        _l.classList.add('loader-out');
+        document.documentElement.style.overflow = '';
+        setTimeout(function () { _l.remove(); }, 750);
+      }, 2400);
+    })();
+
     // Scroll progress bar
     const bar = document.getElementById('scroll-bar');
     const updateBar = () => {
