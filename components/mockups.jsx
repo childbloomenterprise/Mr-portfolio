@@ -25,7 +25,7 @@ const BloomMark = ({ size = 18, color = BLOOM_SAGE }) => (
 );
 
 const PhoneFrame = ({ children, className = '', statusDark = false }) => (
-  <div className={`relative mx-auto ${className}`} style={{ width: 360, height: 740 }}>
+  <div data-mockup className={`relative mx-auto ${className}`} style={{ width: 360, height: 740 }}>
     <div className="absolute inset-0 rounded-[58px] bg-black p-[10px] shadow-[0_60px_120px_-30px_rgba(0,0,0,.55),0_30px_60px_-30px_rgba(0,0,0,.5)]">
       <div className="relative w-full h-full rounded-[48px] overflow-hidden" style={{ background: statusDark ? BLOOM_BG : '#fff' }}>
         <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-30 h-[26px] w-[110px] rounded-full bg-black"></div>
@@ -77,12 +77,17 @@ const BloomNav = ({ active = 'home', onTab }) => (
 const SleepOverlay = ({ onClose }) => {
   const [active, setActive] = React.useState(false);
   const [secs, setSecs] = React.useState(0);
+  const [saved, setSaved] = React.useState(false);
   React.useEffect(() => {
     if (!active) return;
     const t = setInterval(() => setSecs(s => s + 1), 1000);
     return () => clearInterval(t);
   }, [active]);
   const fmt = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  const handleStop = () => {
+    if (active) { setActive(false); setSaved(true); setTimeout(() => onClose(), 900); }
+    else { setActive(true); }
+  };
   return (
     <div className="absolute inset-0 z-30 flex flex-col justify-end" style={{ background: 'rgba(11,20,17,.7)', backdropFilter: 'blur(4px)' }} onClick={e => { if(e.target===e.currentTarget) onClose(); }}>
       <div className="sheet-up rounded-t-3xl p-6" style={{ background: BLOOM_CARD, border: `1px solid ${BLOOM_LINE}` }}>
@@ -96,12 +101,12 @@ const SleepOverlay = ({ onClose }) => {
         </div>
         <div className="text-center py-6">
           <div className="font-serif italic text-[52px] tabular-nums" style={{ color: active ? BLOOM_CREAM : BLOOM_DIM, transition: 'color 400ms' }}>{fmt(secs)}</div>
-          <div className="text-[12px] mt-1" style={{ color: BLOOM_DIM }}>{active ? 'timer running' : 'tap to begin'}</div>
+          <div className="text-[12px] mt-1" style={{ color: BLOOM_DIM }}>{saved ? '✓ Sleep saved!' : active ? 'timer running' : 'tap to begin'}</div>
         </div>
-        <button onClick={() => { active ? (setActive(false), onClose()) : setActive(true); }}
+        <button onClick={handleStop}
                 className="w-full py-3.5 rounded-2xl text-[14px] font-medium transition"
-                style={{ background: active ? BLOOM_SAGE : BLOOM_DEEP, color: BLOOM_CREAM }}>
-          {active ? '⏹ Stop & save' : '▶ Start sleep timer'}
+                style={{ background: saved ? 'rgba(127,167,145,.15)' : active ? BLOOM_SAGE : BLOOM_DEEP, color: BLOOM_CREAM }}>
+          {saved ? '✓ Saved' : active ? '⏹ Stop & save' : '▶ Start sleep timer'}
         </button>
         <div className="mt-3 text-center text-[11px]" style={{ color: BLOOM_DIM }}>Last logged: 6h 24m · 2 nights ago</div>
       </div>
@@ -158,7 +163,7 @@ const FeedOverlay = ({ onClose }) => {
             ✓ Feed logged!
           </div>
         ) : (
-          <button onClick={() => setSaved(true)} className="w-full py-3.5 rounded-2xl text-[14px] font-medium transition"
+          <button onClick={() => { setSaved(true); setTimeout(() => onClose(), 1000); }} className="w-full py-3.5 rounded-2xl text-[14px] font-medium transition"
                   style={{ background: BLOOM_DEEP, color: BLOOM_CREAM }}>
             Log {mins}min {type}{type==='breast'?' · '+side:''}
           </button>
@@ -525,7 +530,7 @@ const DrBloomMockup = () => {
   const [messages, setMessages] = React.useState([]);
   const [typing, setTyping] = React.useState(false);
   const [hovChip, setHovChip] = React.useState(null);
-  const msgEnd = React.useRef(null);
+  const msgsRef = React.useRef(null);
 
   const chips = [
     { q:'IAP vs government vaccine schedule?', a:'IAP adds Rotavirus, PCV, and Hib — not in the government schedule. These protect against diarrhea, pneumonia, and meningitis, which are significant causes of hospitalisation in Indian infants.' },
@@ -534,7 +539,7 @@ const DrBloomMockup = () => {
   ];
 
   React.useEffect(() => {
-    msgEnd.current && msgEnd.current.scrollIntoView({ behavior:'smooth' });
+    if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages, typing]);
 
   const send = chip => {
@@ -575,7 +580,7 @@ const DrBloomMockup = () => {
             </div>
           </>
         ) : (
-          <div className="px-4 mt-3 space-y-3 overflow-y-auto pb-3" style={{ maxHeight:'calc(100% - 210px)' }}>
+          <div ref={msgsRef} className="px-4 mt-3 space-y-3 overflow-y-auto pb-3" style={{ maxHeight:'calc(100% - 210px)' }}>
             {messages.map((m,i)=>(
               <div key={i} className={`flex ${m.from==='user' ? 'justify-end' : 'justify-start'} items-end gap-2`}>
                 {m.from==='bloom' && (
@@ -601,7 +606,6 @@ const DrBloomMockup = () => {
                 </div>
               </div>
             )}
-            <div ref={msgEnd}></div>
           </div>
         )}
 
@@ -683,11 +687,11 @@ const BloomEnterpriseMockup = () => {
           ))}
           <div className="text-[10px] uppercase tracking-wider text-neutral-400 px-2 mt-4 mb-1">Insights</div>
           {['Outcomes','Risk flags','Reports'].map((t,i)=>(
-            <div key={i}
+            <div key={i} onClick={() => setActiveNav(t)}
                  onMouseEnter={() => setHovSide(10+i)} onMouseLeave={() => setHovSide(null)}
                  className="flex items-center gap-2 px-2 py-1.5 rounded-md text-[12.5px] cursor-pointer mb-0.5"
-                 style={{ background: hovSide===10+i ? 'rgba(0,0,0,.05)' : 'transparent', color:'#404040', transition:'background 150ms ease' }}>
-              <span className="w-3.5 h-3.5 rounded bg-current opacity-50"></span>{t}
+                 style={{ background: activeNav===t ? '#000' : hovSide===10+i ? 'rgba(0,0,0,.05)' : 'transparent', color: activeNav===t ? '#fff' : '#404040', transition:'all 150ms ease' }}>
+              <span className="w-3.5 h-3.5 rounded" style={{ background:'currentColor', opacity: activeNav===t ? 0.9 : 0.5 }}></span>{t}
             </div>
           ))}
         </div>
@@ -706,7 +710,126 @@ const BloomEnterpriseMockup = () => {
             </div>
           </div>
 
-          {activeNav === 'Programs' ? (
+          {activeNav === 'Overview' ? (
+            <div>
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                {kpis.map((k,i)=>(
+                  <div key={i} onMouseEnter={() => setHovCard(i)} onMouseLeave={() => setHovCard(null)}
+                       className="rounded-xl border border-black/5 bg-white p-3.5 cursor-pointer"
+                       style={{ boxShadow: hovCard===i ? '0 8px 24px -8px rgba(0,0,0,.14)' : 'none', transform: hovCard===i ? 'translateY(-2px)' : 'none', transition:'all 200ms ease' }}>
+                    <div className="text-[11px] text-neutral-500">{k.l}</div>
+                    <div className="text-[20px] font-semibold tracking-tight mt-1">{k.v}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color:BLOOM_DEEP }}>{k.d}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-black/5 bg-white p-4">
+                  <div className="text-[13px] font-semibold mb-3">Recent activity</div>
+                  {[
+                    { icon:'🏥', text:'PCV due for 14 children',   time:'2h ago',  col:'#F59E0B' },
+                    { icon:'📈', text:'Malappuram cohort +12 new', time:'5h ago',  col:BLOOM_DEEP },
+                    { icon:'⚠️', text:'8 risk flags in Wayanad',   time:'Yesterday', col:'#EF4444' },
+                    { icon:'✅', text:'Kozhikode A · all clear',   time:'2d ago',  col:BLOOM_DEEP },
+                  ].map((a,i)=>(
+                    <div key={i} onMouseEnter={() => setHovRow(i)} onMouseLeave={() => setHovRow(null)}
+                         className="flex items-center gap-2.5 py-2 cursor-pointer"
+                         style={{ borderBottom: i<3 ? '1px solid rgba(0,0,0,.05)' : 'none', transform: hovRow===i ? 'translateX(3px)' : 'none', transition:'transform 160ms' }}>
+                      <span className="text-[16px] w-5 text-center">{a.icon}</span>
+                      <div className="flex-1 text-[12px] text-neutral-700">{a.text}</div>
+                      <div className="text-[10px] text-neutral-400">{a.time}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl border border-black/5 bg-white p-4">
+                  <div className="text-[13px] font-semibold mb-3">Program health</div>
+                  {programs.map((p,i)=>(
+                    <div key={i} onMouseEnter={() => setHovRow(10+i)} onMouseLeave={() => setHovRow(null)}
+                         className="flex items-center gap-2 py-1.5 cursor-pointer"
+                         style={{ borderBottom: i<programs.length-1 ? '1px solid rgba(0,0,0,.04)' : 'none' }}>
+                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background:statusColor(p.status) }}></div>
+                      <div className="flex-1 text-[11.5px] text-neutral-700 truncate">{p.name.split(' ').slice(0,3).join(' ')}</div>
+                      <div className="text-[10px]" style={{ color: p.risk>=5 ? '#EF4444' : 'rgba(0,0,0,.4)' }}>{p.risk} flags</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : activeNav === 'Children' ? (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                {['All','On track','At risk','Flagged'].map((f,i)=>(
+                  <button key={i} onMouseEnter={() => setHovCard(i)} onMouseLeave={() => setHovCard(null)}
+                          className="text-[11.5px] px-3 py-1.5 rounded-full border transition cursor-pointer"
+                          style={{ background: i===0 ? '#000' : hovCard===i ? 'rgba(0,0,0,.05)' : '#fff', color: i===0 ? '#fff' : '#404040', borderColor: i===0 ? '#000' : 'rgba(0,0,0,.1)' }}>
+                    {f}
+                  </button>
+                ))}
+                <div className="ml-auto text-[11px] text-neutral-400">1,284 children</div>
+              </div>
+              <div className="rounded-xl border border-black/5 bg-white p-4" style={{ maxHeight:330, overflowY:'auto' }}>
+                <div className="grid grid-cols-5 text-[10px] uppercase tracking-wider text-neutral-400 pb-2 mb-1" style={{ borderBottom:'1px solid rgba(0,0,0,.06)' }}>
+                  <div className="col-span-2">Child</div><div>Age</div><div>Milestone</div><div>Last active</div>
+                </div>
+                {[
+                  { name:'Yuga V.',    age:'9m',  ms:'Wave bye-bye',   last:'Today',      status:'active' },
+                  { name:'Aanya P.',   age:'14m', ms:'First steps',    last:'Yesterday',  status:'active' },
+                  { name:'Rishi K.',   age:'6m',  ms:'Sits w/ support',last:'2d ago',     status:'active' },
+                  { name:'Meera S.',   age:'2y',  ms:'2-word phrases', last:'3d ago',     status:'review' },
+                  { name:'Dev N.',     age:'18m', ms:'10–20 words',    last:'Today',      status:'active' },
+                  { name:'Tara M.',    age:'4m',  ms:'Laughs aloud',   last:'1d ago',     status:'active' },
+                  { name:'Arjun R.',   age:'1y',  ms:'First words',    last:'5d ago',     status:'alert'  },
+                  { name:'Zara K.',    age:'3y',  ms:'Play age',       last:'Today',      status:'active' },
+                ].map((c,i)=>(
+                  <div key={i} onMouseEnter={() => setHovRow(i)} onMouseLeave={() => setHovRow(null)}
+                       className="grid grid-cols-5 py-2.5 cursor-pointer"
+                       style={{ borderBottom: '1px solid rgba(0,0,0,.04)', background: hovRow===i ? 'rgba(0,0,0,.02)' : 'transparent', transition:'background 140ms' }}>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold text-white flex-shrink-0"
+                           style={{ background: statusColor(c.status) }}>{c.name[0]}</div>
+                      <span className="text-[12px] text-neutral-800">{c.name}</span>
+                    </div>
+                    <div className="text-[12px] text-neutral-500 flex items-center">{c.age}</div>
+                    <div className="text-[11.5px] text-neutral-600 flex items-center truncate">{c.ms}</div>
+                    <div className="text-[11px] text-neutral-400 flex items-center">{c.last}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : activeNav === 'Risk flags' ? (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="text-[13px] font-semibold">26 active flags</div>
+                <div className="ml-auto text-[11.5px] px-3 py-1.5 rounded-full cursor-pointer border border-black/10 hover:bg-black/5 transition">Mark all reviewed</div>
+              </div>
+              <div className="rounded-xl border border-black/5 bg-white p-4" style={{ maxHeight:370, overflowY:'auto' }}>
+                {[
+                  { child:'Dev N.',   age:'18m', flag:'No words yet at 18 months',          sev:'high',   prog:'Malappuram Block 2' },
+                  { child:'Arjun R.', age:'1y',  flag:'Weight below P10 for 2 months',       sev:'high',   prog:'PHC Wayanad Pilot' },
+                  { child:'Meera S.', age:'2y',  flag:'Regression in language milestones',   sev:'medium', prog:'Anganwadi Kannur' },
+                  { child:'Priya K.', age:'9m',  flag:'Missed PCV — 3 weeks overdue',        sev:'medium', prog:'ASHA Kozhikode A' },
+                  { child:'Sam T.',   age:'6m',  flag:'Low weight gain (−2 standard dev)',   sev:'high',   prog:'Tribal Health Idukki' },
+                  { child:'Raji M.',  age:'3y',  flag:'No peer play observed at 36 months',  sev:'medium', prog:'PHC Wayanad Pilot' },
+                ].map((r,i)=>(
+                  <div key={i} onMouseEnter={() => setHovRow(i)} onMouseLeave={() => setHovRow(null)}
+                       className="flex items-start gap-3 py-3 cursor-pointer"
+                       style={{ borderBottom: i<5 ? '1px solid rgba(0,0,0,.05)' : 'none', transform: hovRow===i ? 'translateX(3px)' : 'none', transition:'transform 160ms' }}>
+                    <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: r.sev==='high' ? '#EF4444' : '#F59E0B', boxShadow: hovRow===i ? `0 0 6px ${r.sev==='high' ? '#EF4444' : '#F59E0B'}` : 'none', transition:'box-shadow 200ms' }}></div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[12.5px] font-medium text-neutral-800">{r.child}</span>
+                        <span className="text-[10px] text-neutral-400">· {r.age}</span>
+                        <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: r.sev==='high' ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.08)', color: r.sev==='high' ? '#EF4444' : '#D97706' }}>{r.sev}</span>
+                      </div>
+                      <div className="text-[12px] text-neutral-600 mt-0.5">{r.flag}</div>
+                      <div className="text-[10.5px] text-neutral-400 mt-0.5">{r.prog}</div>
+                    </div>
+                    <button className="text-[10.5px] px-2.5 py-1 rounded-full border border-black/10 hover:bg-black/5 transition flex-shrink-0">Review</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : activeNav === 'Programs' ? (
             <div>
               <div className="grid grid-cols-3 gap-3 mb-4">
                 {[{l:'Active programs',v:'12'},{l:'Families reached',v:'1,284'},{l:'Risk alerts',v:'26'}].map((k,i)=>(

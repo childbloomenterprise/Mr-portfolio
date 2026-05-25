@@ -354,6 +354,7 @@
         }
       }, { passive: true });
       document.addEventListener('mouseover', e => {
+        if (e.target.closest('[data-mockup]')) { _cur.classList.remove('cursor-expand'); return; }
         const hit = e.target.closest('a,button,[role="button"],input,select,textarea,.cursor-pointer,label,summary');
         _cur.classList.toggle('cursor-expand', !!hit);
       });
