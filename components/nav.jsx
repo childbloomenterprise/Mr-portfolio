@@ -13,10 +13,10 @@ const Nav = () => {
           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black text-white font-serif italic text-[15px] leading-none pb-0.5">V</span>
           <span className="hidden sm:inline font-serif italic text-[20px] leading-none text-black" style={{ fontFamily: "Manrope" }}>Vaibhav Varun</span>
         </a>
-        <div className="flex items-center gap-1 sm:gap-2 text-[13.5px]">
-          <a href="#work" className="px-3 py-1.5 rounded-full hover:bg-black/5 text-black/70 hover:text-black transition">Work</a>
-          <a href="#about" className="px-3 py-1.5 rounded-full hover:bg-black/5 text-black/70 hover:text-black transition">About</a>
-          <a href="#stack" className="px-3 py-1.5 rounded-full hover:bg-black/5 text-black/70 hover:text-black transition hidden sm:inline-flex">Stack</a>
+        <div className="flex items-center gap-5 sm:gap-6 text-[13.5px]">
+          <a href="#work"    className="nav-link">Work</a>
+          <a href="#about"   className="nav-link">About</a>
+          <a href="#stack"   className="nav-link hidden sm:inline">Stack</a>
           <a href="#contact" className="ml-1 px-3.5 py-1.5 rounded-full bg-black text-white text-[13px] font-medium hover:bg-neutral-800 transition">Hire me</a>
         </div>
       </nav>

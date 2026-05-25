@@ -1,3 +1,33 @@
+const RoleCycle = () => {
+  const roles = ['Solo Founder', 'AI Engineer', 'Builder'];
+  const [idx,   setIdx]   = React.useState(0);
+  const [text,  setText]  = React.useState('');
+  const [del,   setDel]   = React.useState(false);
+  const [pause, setPause] = React.useState(false);
+  React.useEffect(() => {
+    const role = roles[idx];
+    if (pause) {
+      const t = setTimeout(() => { setPause(false); setDel(true); }, 2000);
+      return () => clearTimeout(t);
+    }
+    if (!del && text.length < role.length) {
+      const t = setTimeout(() => setText(role.slice(0, text.length + 1)), 78);
+      return () => clearTimeout(t);
+    }
+    if (!del && text.length === role.length) { setPause(true); return; }
+    if (del && text.length > 0) {
+      const t = setTimeout(() => setText(text.slice(0, -1)), 42);
+      return () => clearTimeout(t);
+    }
+    if (del && text.length === 0) { setDel(false); setIdx((idx + 1) % roles.length); }
+  }, [text, del, pause, idx]);
+  return (
+    <span className="font-mono text-[11px] sm:text-[12px] tracking-[.2em] uppercase" style={{ color: 'rgba(0,0,0,.42)' }}>
+      {text}<span className="caret" style={{ color: 'var(--accent,#1D9E75)', fontWeight: 300 }}>|</span>
+    </span>
+  );
+};
+
 const Hero = () => {
   return (
     <section id="top" className="relative min-h-[100svh] flex flex-col justify-center px-6 pt-24 pb-16 overflow-hidden">
@@ -6,6 +36,9 @@ const Hero = () => {
           <div className="flex items-center gap-2 text-[12px] uppercase tracking-[.2em] text-neutral-500">
             <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#1D9E75]"></span>
             <span>Kochi · Kerala · India</span>
+          </div>
+          <div className="mt-3">
+            <RoleCycle />
           </div>
         </Reveal>
 
